@@ -136,11 +136,12 @@ else
 print "\n\nWelcome, $name, to the NetHack Tournament $year\n\n";
 
 $offer_zapm = 0;
+# For testing:
 # ZAPM-$name-practise allows ZAPM to be offered to players without
 # affecting wishing in nethack.  This cannot be created by the player
 # so is only by invitation of the admin.
 if((-e "$tournament_home/challenge/ZAPM-$name-accept"
-	|| -e $tournament_home/challenge/ZAPM-$name-practise)
+	|| glob("$tournament_home/challenge/ZAPM-$name-practi[cs]e"))
 	&& (!-e "$tournament_home/challenge/ZAPM-$name-ignore"))
 {
 	$offer_zapm = 1;
