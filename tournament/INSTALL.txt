@@ -29,9 +29,13 @@ the nhadmin user (which you will create during the steps below).
 
 As it stands, you need to perform these steps, roughly in this order:
 
-1)	Install NetHack 3.4.3 (as user "nethack", group "nethack"); if you
-are, for example, using a *BSD port and cannot choose the install user, you
-can manually create nethack:nethack and the change the permission mannually:
+1)	Build and install the devnull release of NetHack 3.6.0:
+	git clone http://github.com/NHTangles/dev-null-nethack
+	cd dev-null-nethack
+	git checkout nh360_devnull
+Build according to the included instructions, and install as user and group
+"nethack".  If you can't choose the install user at build time, you can
+create nethack:nethack and the change the permission mannually:
 
 	chown -R nethack:nethack NETHACKDIR
 	cd NETHACKDIR
@@ -39,60 +43,12 @@ can manually create nethack:nethack and the change the permission mannually:
 	chmod u+w save
 	chmod ug+w logfile record xlogfile
 
-NOTE: Before you build NetHack, you will need to apply the Tournament patch to
-the source directory with the following command (run from the directory in
-which you extracted the NetHack distribution file):
-
-	patch < nethack.diff
-
-Apply the patch _before_ modifying the source options to build on your
-platform.  diff files are finicky about where things are, and are most likely
-to patch successfully if your source directory is an unmodified extraction
-from the DevTeam's official source tar file.
-
-The Tournament patch includes our own Tournament-specific changes as well as
+This package includes our own Tournament-specific changes as well as
 Jukka Lahtinen's logmove patch, Aardvark's recordconduct patch, Jared
 Minch's xlogfile patch (with Extinctionism added by ais523), Mikko Juola's
 PRNG patch and Jack Whitham's tilehack patch.  The game server distribution
 also uses or includes The Dev Team's NetHack, Cyrus Dolph's ZAPM and
 Shellinabox by Markus Gutschke.
-
-(If you're installing from a *BSD ports tree, the entire NetHack patch, build
-and install process can usually be accomplished with the following commands
-(assuming the Tournament distribution is in your home directory):
-
-	cd /usr/ports/games/nethack
-	make patch
-	cd /usr/ports/obj/nethack-3.4.3p2/w-nethack-3.4.3p2
-
-	NOTE: OpenBSD users need to also run the following command to
-	remove the port's activation of WIZARD mode
-	perl -pi -e 's/\#define\ WIZARD\ \"games\"\n//g;' nethack-3.4.3/include/config.h
-
-	patch < ~/tournament/nethack.diff
-
-	NOTE: on OpenBSD, one patch will probably fail; it's OK, that patch
-	sets the COMPRESS to gzip and the port had already done that
-
-	cd ..
-	make install
-
-	NOTE: on OpenBSD, the port overrides the NetHack makefiles in such a
-	way to prevent the install of the Tournament's additional files, so
-	you'll have to copy them over by hand
-
-	cp -p w-nethack-3.4.3p2/fake-i386/usr/local/lib/nethackdir-3.4.3/xlogfile /usr/local/lib/nethackdir-3.4.3/
-	cp -p w-nethack-3.4.3p2/fake-i386/usr/local/lib/nethackdir-3.4.3/gruelair.lev /usr/local/lib/nethackdir-3.4.3/
-	cp -p w-nethack-3.4.3p2/fake-i386/usr/local/lib/nethackdir-3.4.3/pmaze.lev /usr/local/lib/nethackdir-3.4.3/
-	cp -p w-nethack-3.4.3p2/fake-i386/usr/local/lib/nethackdir-3.4.3/dmaze.lev /usr/local/lib/nethackdir-3.4.3/
-	cp -p w-nethack-3.4.3p2/fake-i386/usr/local/lib/nethackdir-3.4.3/pool1.lev /usr/local/lib/nethackdir-3.4.3/
-	cp -p w-nethack-3.4.3p2/fake-i386/usr/local/lib/nethackdir-3.4.3/joust.lev /usr/local/lib/nethackdir-3.4.3/
-
-	cp -pR ~/tournament /usr/local/lib/nethackdir-3.4.3/
-
-This has been confirmed on OpenBSD 4.6, but should be the same (or at least
-quite similar, differing only in minor details like directory locations) on
-any other *BSD.)
 
 NOTE: script/makeserver-OpenBSD.sh automates the process for creating a game
 server on OpenBSD from scratch; even if you're using another Unix, you may
@@ -124,11 +80,12 @@ compile and install ZAPM:
 NOTE: *BSD machines will probably need to use "gmake" instead of "make"
 in that command
 
-3)	extract the tournament distribution file to the NETHACKDIR, generally
+3)	extract the tournament distribution to the NETHACKDIR, generally
 with a command like:
 
-	cd NETHACKDIR
-	tar -zxvf ~/tournament.tgz
+	git clone http://github.com/NHTangles/devnull-gameserver
+	cd devnull-gameserver
+	mv tournament NETHACKDIR
 
 4)	create a user called "nhadmin", group "nhadmin"; this user's home
 directory must be set to the "tournament" directory in NETHACKDIR (wherever
