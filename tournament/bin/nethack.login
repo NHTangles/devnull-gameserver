@@ -115,7 +115,12 @@ if(-e "$player_home/$name/.tournamentrc")
 			{
 				$tournamentrc{'t_record'} = 1;
 				
-				$nethack = "$nethack | $tournament_home/bin/recordnethack.pl";
+				#$nethack = "$nethack | $tournament_home/bin/recordnethack.pl";
+				#$nethack = "SHELL=/bin/sh /usr/bin/ttyrec -e $nethack $gamefile";
+				# pass $nethack as an arg to recordnethack. Maybe we can use the
+				# same script to record zapm as well.
+				$nethack = "$tournament_home/bin/recordnethack.pl $nethack";
+				$zapm = "$tournament_home/bin/recordnethack.pl $zapm";
 			}
 			elsif("!t_record" eq $thing)
 			{

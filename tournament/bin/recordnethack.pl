@@ -50,21 +50,27 @@ require "$tournament_home/include/generic/include.pl";
 
 ($name,$passwd,$uid,$gid,$quota,$comment,$gcos,$home_dir,$shell)=getpwuid($<);
 
-# Read in the game session
 
-$gamefile = "$tournament_home/gamefiles/$name.$stamp";
+$run = join ( " ", @ARGV);
 
-$| = 1;
-while(read(STDIN, $char, 1))
+$gamefile = "$name.$stamp.ttyrec";
+
+if ($run =~ /zapm/)
 {
-	$game .= $char;
-	print STDOUT $char;
+	$gamefile = "z." . $gamefile;
+}
+else
+{
+	$gamefile = "n." . $gamefile;
 }
 
-open(GAME, ">>$gamefile") || die "Could not open game playback file \"$player_home/$name/gametemp\": $1";
-print GAME $game;
-close(GAME);
+$gamefile = "$tournament_home/gamefiles/$gamefile";
 
-system("chmod g+w $tournament_home/gamefiles/$name.$stamp");
+system ("SHELL=/bin/sh $ttyrec -e \"$run\" $gamefile");
 
-print "Thank you for recording your gaming session.\nThe stored file for that session is \"$name.$stamp\", should you care to publish it for others' entertainment.\n\n";
+system("chmod g+w $gamefile");
+
+@popper = split("/", $gamefile);
+$gamebase = pop(@popper);
+
+print "Thank you for recording your gaming session.\nThe stored file for that session is \"$gamebase\", should you care to publish it for others' entertainment.\n\n";
