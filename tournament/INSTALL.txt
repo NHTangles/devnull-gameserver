@@ -173,7 +173,7 @@ Shell-in-a-Box; this will allow your server to offer tiles
 
 TESTING:
         If desired, create a user for testing.
-	adduser --home NETHACKDIR/tournament/players/nhtest --shell NETHACKDIR/tournament/bin/nethack.login --no-create-home --uid 9998 --ingroup nhplayer nhtest
+	adduser --home NETHACKDIR/tournament/players/nhtest --shell NETHACKDIR/tournament/bin/nethack.login --uid 9998 --ingroup nhplayer nhtest
 
 18) sign up for a game server administrator account on or site at
 <http://nethack.devnull.net/tournament/registration.shtml>.
