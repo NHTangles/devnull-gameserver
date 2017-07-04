@@ -1,6 +1,22 @@
 This is version 0.2.0 of the /dev/null/nethack Tournament Game Server
 (Just in case you didn't know what you were fiddling with.)
 
+This package includes our own Tournament-specific changes as well as
+Jukka Lahtinen's logmove patch, and Mikko Juola's PRNG patch.  The game server
+distribution also uses or includes The Dev Team's NetHack, Cyrus Dolph's ZAPM
+and Shellinabox by Markus Gutschke.
+
+NOTE: script/makeserver-OpenBSD.sh automates the process for creating a game
+server on OpenBSD from scratch; even if you're using another Unix, you may
+find it useful to read through the script.
+The instructions below are for building on a Debian/Ubuntu style system, but
+should be adaptable to any suitable platform.
+
+You may also need to change the following line in include/config.h to reflect
+the path to gzip on your particular machine:
+
+	#define COMPRESS "/usr/bin/gzip"          /* FSF gzip compression */
+
 NOTE: All paths here are relative to your NETHACKDIR, which you set when you
 compile and install NETHACK.
 
@@ -30,11 +46,21 @@ the nhadmin user (which you will create during the steps below).
 As it stands, you need to perform these steps, roughly in this order:
 
 1)	Build and install the devnull release of NetHack 3.6.0:
-	git clone http://github.com/NHTangles/dev-null-nethack
-	cd dev-null-nethack
+	git clone http://github.com/NHTangles/NetHack36
+	cd NetHack36
 	git checkout nh360_devnull
 Build according to the included instructions, and install as user and group
-"nethack".  If you can't choose the install user at build time, you can
+"nethack".  This should amount to:
+	cd sys/unix
+	#edit hints/devnull and change the prefix if you don't like /opt/devnull
+	./setup.sh hints/devnull
+	cd ../..
+	make all
+	sudo make install
+        # use update instead of install if you already have things you want to
+        # keep in the install location.
+
+If you can't choose the install user at build time, you can
 create nethack:nethack and the change the permission mannually:
 
 	chown -R nethack:nethack NETHACKDIR
@@ -43,39 +69,20 @@ create nethack:nethack and the change the permission mannually:
 	chmod u+w save
 	chmod ug+w logfile record xlogfile
 
-This package includes our own Tournament-specific changes as well as
-Jukka Lahtinen's logmove patch, Aardvark's recordconduct patch, Jared
-Minch's xlogfile patch (with Extinctionism added by ais523), Mikko Juola's
-PRNG patch and Jack Whitham's tilehack patch.  The game server distribution
-also uses or includes The Dev Team's NetHack, Cyrus Dolph's ZAPM and
-Shellinabox by Markus Gutschke.
+2)	Install ZAPM 0.8.3 (as user "nethack", group "nethack"); The source
+for a tournament-patched version of zapm is available on github.
 
-NOTE: script/makeserver-OpenBSD.sh automates the process for creating a game
-server on OpenBSD from scratch; even if you're using another Unix, you may
-find it useful to read through the script.
+	git clone https://github.com/NHTangles/devnull-zapm
+	cd devnull-zapm
+edit the ZAPM Makefile with your NETHACKDIR
 
-You may also need to change the following line in include/config.h to reflect
-the path to gzip on your particular machine:
-
-	#define COMPRESS "/usr/bin/gzip"          /* FSF gzip compression */
-
-2)	Install ZAPM 0.8.3 (as user "nethack", group "nethack");  start by extracting
-and patching the ZAPM distribution files, generally with a command like:
-
-	cd
-	tar -zxvf ~/zapm.tgz
-	patch < ~/tournament/zapm.diff
-
-edit the ZAPM Makefile to reflect the following options:
-
-	ZAPMOWNER= nethack
 	GAMEDIR= "NETHACKDIR"
 	DATADIR= "NETHACKDIR/zapmdir"
 
 compile and install ZAPM:
 
-	cd zapm-0.8.3
-	make install
+	make
+	sudo make install
 
 NOTE: *BSD machines will probably need to use "gmake" instead of "make"
 in that command
@@ -85,17 +92,21 @@ with a command like:
 
 	git clone http://github.com/NHTangles/devnull-gameserver
 	cd devnull-gameserver
-	mv tournament NETHACKDIR
+	sudo cp -a tournament NETHACKDIR
 
 4)	create a user called "nhadmin", group "nhadmin"; this user's home
 directory must be set to the "tournament" directory in NETHACKDIR (wherever
 that ended up on your server, since that directory contains the ".ssh"
 directory the control server needs to talk to your new game server and because
 all game server paths depend on "nhadmin" having that home directory; this
-user should also have a valid shell, preferably tcsh.
+user should also have a valid shell, [preferably tcsh]. As root:
+	adduser --home NETHACKDIR/tournament --no-create-home nhadmin
 
 5)	create a user and group called "nhplayer"; add "nhadmin" to the new
-"nhplayer" group
+"nhplayer" group.
+	addgroup nhplayer
+	adduser nhadmin nhplayer
+
 
 6)	change the ownerships of everything in the "tournament" directory to
 "nhadmin:nhadmin" (since its user number matches that account on my box,
@@ -137,31 +148,32 @@ and make it set GID, generally like this:
 	chgrp nhplayer challenge
 	chmod g+ws challenge
 
-12) change the permissions for the "temp" directory, generally as follows:
-
-	chmod g+ws temp
-
-13)	edit the Tournament configuration file (which is
+12)	edit the Tournament configuration file (which is
 "tournament/conf/nethack_tournament.conf") to match your system setup and
 change the user messages in "tournament/message"
 
 14) add the Tournament login shell to the "/etc/shells" file on your server,
 possibly as:
 
-	echo [NETHACKDIR]/tournament/bin/nethack.login >> /etc/shells
+	echo NETHACKDIR/tournament/bin/nethack.login >> /etc/shells
 
 15)	add the Tournament's scheduler to your root crontab, like so:
 
 	#NetHack Tournament Scheduler
-	0,5,10,15,20,25,30,35,40,45,50,55 * * * * /nethack/tournament/bin/cron_tasks.pl
+	0,5,10,15,20,25,30,35,40,45,50,55 * * * * NETHACKDIR/tournament/bin/cron_tasks.pl
 
-16) if you choose to, activate the telnet daemon either by running telnetd or
-by activating it in "/etc/inetd.conf" and "kill -HUP"ing inetd; telnet is no
-longer required for the Tournament, though, and we've stopped supporting it
-on our own servers
+16) [NOT TESTED] if you choose to, activate the telnet daemon either by
+running telnetd or by activating it in "/etc/inetd.conf" and "kill -HUP"ing inetd;
+telnet is no longer required for the Tournament, though, and we've stopped
+supporting it on our own servers.
 
-17) if you choose to, build and install the Tournament's modified version of
+17) [NOT CURRENTLY WORKING] if you choose to, build and install the
+Tournament's modified version of
 Shell-in-a-Box; this will allow your server to offer tiles
+
+TESTING:
+        If desired, create a user for testing.
+	adduser --home NETHACKDIR/tournament/players/nhtest --shell NETHACKDIR/tournament/bin/nethack.login --no-create-home --uid 9998 --ingroup nhplayer nhtest
 
 18) sign up for a game server administrator account on or site at
 <http://nethack.devnull.net/tournament/registration.shtml>.
